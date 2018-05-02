@@ -55,6 +55,7 @@ split.
 (*
   a, b: Prop
   H: a /\ b
+  ================
   1/2
   b
   2/2
@@ -66,6 +67,7 @@ destruct H as [H1 H2].
   a, b: Prop
   H1: a
   H2: b
+  ================
   1/2
   b
   2/2
@@ -76,6 +78,7 @@ exact H2.
 (*
   a, b: Prop
   H: a /\ b
+  =================
   1/1
   a
 *)
@@ -121,7 +124,7 @@ Qed.
   +--------------+----------+--------------------+-------------------------+
   | conclusion   | intros H | intros H           | split                   |
   +--------------+----------+--------------------+-------------------------+
-  
+
   +--------------+----------+----------------------------------------------+
   |              | not      | there exists       | disjunction (or)        | 
   +--------------+----------+--------------------+-------------------------+
@@ -142,6 +145,77 @@ Qed.
   |              |          |                    |                         |
   +--------------+----------+--------------------+-------------------------+
   | conclusion   | reflexi- |                    |                         |
-  |              |-vity ring|                    |                         |
+  |              |-vity     |                    |                         |
+  |              |   ring   |                    |                         |
   +--------------+----------+--------------------+-------------------------+
+
+  "elim" and "case" may create new facts that are placed in the conclusion of resulting goals
+  as premises of newly created implications
+  these premises then need to be introduced in the context using "intros" ("intros" is used to work on
+  implications when they're in the conclusion)
+  the tactic "destruct" does these two operations at once
+
+  tactics that work on hypotheses and take hypotheses names as arguments can also take theorem names as arguments
+
+  Taken from https://coq.inria.fr/tutorial-nahas:
+  RULE: If the subgoal starts with "(forall <name> : <type>, ..." Then use tactic "intros <name>."
 *)
+
+Lemma example3: forall A B, A \/ B -> B \/ A.
+(* for any two propositions A and B, if A \/ B holds, then B \/ A holds *)
+(* our first reasoning step introduces the universally quantified propositions and the hypothesis in the context *)
+Proof.
+  intros A B H.
+  (*
+    A, B: Prop
+    H: A \/ B
+    ============
+    1/1
+    B \/ A
+  *)
+
+  (*
+    In English, this kinda means "let's fix two propositions, A and B, and let's assume A \/ B holds,
+    now we only have to prove B \/ A"
+    Since we can't really say anything about A and B (either one could be responsible for satisfying A \/ B),
+    we should work on the hypothesis
+
+    if A \/ B holds, then we have two cases: either A holds or B holds
+    to get these two cases independently, we can run "destruct"
+  *)
+
+  destruct H as [H1 | H1].
+  (*
+    A, B: Prop
+    H1: A
+    ============
+    1/2
+    B \/ A
+    2/2
+    B \/ A
+
+    Here, we see that we're working on a goal where H1 represents the case where A holds
+    we can work directly on the conclusion and prove the right hand side: A
+  *)
+
+  right; assumption.
+
+  (*
+    A, B: Prop
+    H1: B
+    ===========
+    1/1
+    B \/ A
+
+    "assumption" is getting applied to all the goals produced by "right"
+    "right" transforms the goal's conclusion to "A"
+    "assumption" then proves this by looking for assumptions with A as a statement. In this case, that's H1
+
+    We see now that, having proved our first subgoal, we can move on to our second, the case where B holds
+    We can follow the same procedure, but proving the left-hand side now
+  *)
+
+  left; assumption.
+  (* no more subgoals *)
+Qed.
+(* example3 is defined *)
